@@ -1,3 +1,7 @@
+# npdrm_free_lite
+This is an experimental ark5 optimized build intended to reduce the size of the plugin and identify any remaining patches not included in ark5.
+
+
 # npdrm_free_mod
 by qwikrazor87, modified by lusid1
 
