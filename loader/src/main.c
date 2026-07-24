@@ -31,8 +31,8 @@ PSP_HEAP_SIZE_KB(0);
 
 static STMOD_HANDLER previous = NULL;
 
-char g_pgd_path[256];
-u8 pgdbuf[0x90];
+// char g_pgd_path[256];
+//u8 pgdbuf[0x90];
 
 void *vshCheckBootable(void *dst, const void *src, int size)
 {
@@ -53,118 +53,118 @@ void *vshCheckBootable(void *dst, const void *src, int size)
 	return memcpy(dst, src, size);
 }
 
-void patch_vsh_module(SceModule2 *mod)
-{
-	kprintf("npdrm_free_loader::patch_vsh_module()\n");
-	u32 addr;
-	int syscall = sceKernelQuerySystemCall(vshCheckBootable);
+// void patch_vsh_module(SceModule2 *mod)
+// {
+// 	kprintf("npdrm_free_loader::patch_vsh_module()\n");
+// 	u32 addr;
+// 	int syscall = sceKernelQuerySystemCall(vshCheckBootable);
 
-	for (addr = mod->text_addr; addr < (mod->text_addr + mod->text_size); addr += 4) {
-		if ((_lw(addr) == 0x10400004) && (_lw(addr + 16) == 0x02003021)) {
-			_sw(_lw(addr + 16), addr + 12);
-			_sw(((syscall << 6) | 12) & 0x03FFFFFF, addr + 16);
-			sceKernelDcacheWritebackInvalidateRange((const void *)(addr + 12), 8);
-			sceKernelIcacheInvalidateRange((const void *)(addr + 12), 8);
-			break;
-		}
-	}
-}
+// 	for (addr = mod->text_addr; addr < (mod->text_addr + mod->text_size); addr += 4) {
+// 		if ((_lw(addr) == 0x10400004) && (_lw(addr + 16) == 0x02003021)) {
+// 			_sw(_lw(addr + 16), addr + 12);
+// 			_sw(((syscall << 6) | 12) & 0x03FFFFFF, addr + 16);
+// 			sceKernelDcacheWritebackInvalidateRange((const void *)(addr + 12), 8);
+// 			sceKernelIcacheInvalidateRange((const void *)(addr + 12), 8);
+// 			break;
+// 		}
+// 	}
+// }
 
-u32 tou32(u8 *buf)
-{
-	return (u32)(buf[0] | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24));
-}
+// u32 tou32(u8 *buf)
+// {
+// 	return (u32)(buf[0] | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24));
+// }
 
 //patches sceNpDrmEdataSetupKey and sceNpDrmGetModuleKey
-int (* setup_edat_version_key)(u8 *vkey, u8 *edat, int size);
-int setup_edat_version_key_hook(u8 *vkey, u8 *edat, int size)
-{
-	kprintf("npdrm_free_loader::setup_edat_version_key_hook()\n");
-	int ret = setup_edat_version_key(vkey, edat, size);
+// int (* setup_edat_version_key)(u8 *vkey, u8 *edat, int size);
+// int setup_edat_version_key_hook(u8 *vkey, u8 *edat, int size)
+// {
+// 	kprintf("npdrm_free_loader::setup_edat_version_key_hook()\n");
+// 	int ret = setup_edat_version_key(vkey, edat, size);
 
-	if (ret < 0) { //generate key from mac if official method fails.
-		ret = sceIoOpen(g_pgd_path, 1, 0);
-		sceIoRead(ret, pgdbuf, 16);
-		sceIoLseek(ret, tou32(pgdbuf + 0xC) & 0xFFFF, 0);
-		sceIoRead(ret, pgdbuf, 0x90);
-		sceIoClose(ret);
+// 	if (ret < 0) { //generate key from mac if official method fails.
+// 		ret = sceIoOpen(g_pgd_path, 1, 0);
+// 		sceIoRead(ret, pgdbuf, 16);
+// 		sceIoLseek(ret, tou32(pgdbuf + 0xC) & 0xFFFF, 0);
+// 		sceIoRead(ret, pgdbuf, 0x90);
+// 		sceIoClose(ret);
 
-		ret = get_edat_key(vkey, pgdbuf);
-	}
+// 		ret = get_edat_key(vkey, pgdbuf);
+// 	}
 
-	return ret;
-}
+// 	return ret;
+// }
 
-int (* do_open)(const char *path, int flags, SceMode mode, int async, int retAddr, int oldK1);
-int do_open_hook(const char *path, int flags, SceMode mode, int async, int retAddr, int oldK1)
-{
-	if (flags & 0x40000000)
-		strcpy(g_pgd_path, path);
+// int (* do_open)(const char *path, int flags, SceMode mode, int async, int retAddr, int oldK1);
+// int do_open_hook(const char *path, int flags, SceMode mode, int async, int retAddr, int oldK1)
+// {
+// 	if (flags & 0x40000000)
+// 		strcpy(g_pgd_path, path);
 
-	return do_open(path, flags, mode, async, retAddr, oldK1);
-}
+// 	return do_open(path, flags, mode, async, retAddr, oldK1);
+// }
 
-void patch_drm()
-{
-	kprintf("npdrm_free_loader::patch_drm()\n");
-    u32 addr;
-	SceModule2 *mod = FindModuleByName("scePspNpDrm_Driver");
+// void patch_drm()
+// {
+// 	kprintf("npdrm_free_loader::patch_drm()\n");
+//     u32 addr;
+// 	SceModule2 *mod = FindModuleByName("scePspNpDrm_Driver");
 
-	for (addr = mod->text_addr; addr < (mod->text_addr + mod->text_size); addr += 4) {
-		if (_lw(addr) == 0x2CC60080) { //sltiu      $a2, $a2, 128
-			HIJACK_FUNCTION(addr - 8, setup_edat_version_key_hook, setup_edat_version_key);
-			break;
-		}
-	}
+// 	for (addr = mod->text_addr; addr < (mod->text_addr + mod->text_size); addr += 4) {
+// 		if (_lw(addr) == 0x2CC60080) { //sltiu      $a2, $a2, 128
+// 			HIJACK_FUNCTION(addr - 8, setup_edat_version_key_hook, setup_edat_version_key);
+// 			break;
+// 		}
+// 	}
 
-	addr = K_EXTRACT_IMPORT(sceIoOpen) + 4;
+// 	addr = K_EXTRACT_IMPORT(sceIoOpen) + 4;
 
-	while (1) {
-		if ((_lw(addr) & 0xFC000000) == 0x0C000000) {
-			do_open = (void *)(((_lw(addr) & 0x03FFFFFF) << 2) | 0x80000000);
-			_sw(MAKE_CALL(do_open_hook), addr);
-			break;
-		}
+// 	while (1) {
+// 		if ((_lw(addr) & 0xFC000000) == 0x0C000000) {
+// 			do_open = (void *)(((_lw(addr) & 0x03FFFFFF) << 2) | 0x80000000);
+// 			_sw(MAKE_CALL(do_open_hook), addr);
+// 			break;
+// 		}
 
-		addr += 4;
-	}
+// 		addr += 4;
+// 	}
 
-	ClearCaches();
-}
+// 	ClearCaches();
+// }
 
-void patch_sysconf(SceModule2 *mod)
-{
-	kprintf("npdrm_free_loader::patch_sysconf()\n");
-	//patch sysconf act/rif check, call official function first, then patch to return 0 if it fails.
-	u32 addr;
-	for (addr = mod->text_addr; addr < (mod->text_addr + mod->text_size); addr += 4) {
-		if (_lw(addr) == 0x0062200B) { //movn       $a0, $v1, $v0
-			_sw(MAKE_CALL(0x08802000), addr + 4);
-			_sw(0x27BDFFF0, 0x08802000); //addiu      $sp, $sp, -16
-			_sw(0xAFBF0000, 0x08802004); //sw         $ra, 0($sp)
-			_sw(MAKE_CALL(mod->text_addr + 0x0000A1D0), 0x08802008); //jal        sub_0000A1D0 (sysconf)
-			_sw(0, 0x0880200C); //nop
-			_sw(0x0002100B, 0x08802010); //movn       $v0, $zr, $v0
-			_sw(0x8FBF0000, 0x08802014); //lw         $ra, 0($sp)
-			_sw(0x03E00008, 0x08802018); //jr         $ra
-			_sw(0x27BD0010, 0x0880201C); //addiu      $sp, $sp, 16
-			ClearCaches();
-			break;
-		}
-	}
-}
+// void patch_sysconf(SceModule2 *mod)
+// {
+// 	kprintf("npdrm_free_loader::patch_sysconf()\n");
+// 	//patch sysconf act/rif check, call official function first, then patch to return 0 if it fails.
+// 	u32 addr;
+// 	for (addr = mod->text_addr; addr < (mod->text_addr + mod->text_size); addr += 4) {
+// 		if (_lw(addr) == 0x0062200B) { //movn       $a0, $v1, $v0
+// 			_sw(MAKE_CALL(0x08802000), addr + 4);
+// 			_sw(0x27BDFFF0, 0x08802000); //addiu      $sp, $sp, -16
+// 			_sw(0xAFBF0000, 0x08802004); //sw         $ra, 0($sp)
+// 			_sw(MAKE_CALL(mod->text_addr + 0x0000A1D0), 0x08802008); //jal        sub_0000A1D0 (sysconf)
+// 			_sw(0, 0x0880200C); //nop
+// 			_sw(0x0002100B, 0x08802010); //movn       $v0, $zr, $v0
+// 			_sw(0x8FBF0000, 0x08802014); //lw         $ra, 0($sp)
+// 			_sw(0x03E00008, 0x08802018); //jr         $ra
+// 			_sw(0x27BD0010, 0x0880201C); //addiu      $sp, $sp, 16
+// 			ClearCaches();
+// 			break;
+// 		}
+// 	}
+// }
 
 int module_start_handler(SceModule2 *module)
 {
 	kprintf("npdrm_free_loader::module_start_handler()\n");
 	int ret = previous ? previous(module) : 0;
 
-	if (!strcmp(module->modname, "vsh_module")) {
-		patch_vsh_module(module);
-		patch_drm();
-	} else if (!strcmp(module->modname, "sysconf_plugin_module")) {
-		patch_sysconf(module);
-	}
+	//if (!strcmp(module->modname, "vsh_module")) {
+		//patch_vsh_module(module);
+		//patch_drm();
+	//} else if (!strcmp(module->modname, "sysconf_plugin_module")) {
+		//patch_sysconf(module);
+	//}
 
 	return ret;
 }

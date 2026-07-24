@@ -1,1 +1,5 @@
 npdrm_free_lite.prx
+np9660_patch/npdrm_free.elf
+np9660_patch/npdrm_free.prx
+*.o
+loader/npdrm_free.elf
