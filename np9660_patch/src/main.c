@@ -64,41 +64,6 @@ int is_licensed_eboot(const char *path)
 	return ret;
 }
 
-// SceUID userIoOpen(const char *path, int flags, SceMode mode)
-// {
-// 	if (flags & 0x40000000)
-// 		strcpy(g_pgd_path, path);
-
-// 	return sceIoOpen(path, flags, mode);
-// }
-
-// SceUID userIoOpenAsync(const char *path, int flags, SceMode mode)
-// {
-// 	if (flags & 0x40000000)
-// 		strcpy(g_pgd_path, path);
-
-// 	return sceIoOpenAsync(path, flags, mode);
-// }
-
-//patches sceNpDrmEdataSetupKey and sceNpDrmGetModuleKey
-// int (* setup_edat_version_key)(u8 *vkey, u8 *edat, int size);
-// int setup_edat_version_key_hook(u8 *vkey, u8 *edat, int size) //variable EDAT/SPRX vkey per game, do not backup vkey.
-// {
-// 	int ret = setup_edat_version_key(vkey, edat, size);
-
-// 	if (ret < 0) { //generate key from mac if official method fails.
-// 		ret = sceIoOpen(g_pgd_path, 1, 0);
-// 		sceIoRead(ret, pgdbuf, 16);
-// 		sceIoLseek(ret, tou32(pgdbuf + 0xC) & 0xFFFF, 0);
-// 		sceIoRead(ret, pgdbuf, 0x90);
-// 		sceIoClose(ret);
-
-// 		ret = get_edat_key(vkey, pgdbuf);
-// 	}
-
-// 	return ret;
-// }
-
 int (* setup_eboot_version_key)(u8 *vkey, u8 *cid, u32 type, u8 *act);
 int setup_eboot_version_key_hook(u8 *vkey, u8 *cid, u32 type, u8 *act)
 {
@@ -134,16 +99,6 @@ void patch_drm()
 			break;
 		}
 	}
-
-    //MOD: hook conflicts with nploader_mod
-	// SceModule2 *mod = FindModuleByName("scePspNpDrm_Driver");
-
-	// for (addr = mod->text_addr; addr < (mod->text_addr + mod->text_size); addr += 4) {
-	// 	if (_lw(addr) == 0x2CC60080) { //sltiu      $a2, $a2, 128
-	// 		HIJACK_FUNCTION(addr - 8, setup_edat_version_key_hook, setup_edat_version_key);
-	// 		break;
-	// 	}
-	// }
 
 	ClearCaches();
 }
@@ -188,23 +143,6 @@ void patch_np9660(SceModule2 *mod)
 	ClearCaches();
 }
 
-// void patch_game_module(SceModule2 *mod)
-// {
-// 	kprintf("patch_game_module()\n");
-// 	if (!licensed_eboot)
-// 		return;
-
-// 	u32 user_sceIoOpen = FindImportByModule(mod->modname, "IoFileMgrForUser", 0x109F50BC);
-// 	if (user_sceIoOpen)
-// 		sceKernelHookJalSyscall(userIoOpen, user_sceIoOpen, mod);		
-    
-// 	u32 user_sceIoOpenAsync = FindImportByModule(mod->modname, "IoFileMgrForUser", 0x89AA9906);
-// 	if (user_sceIoOpenAsync)
-// 		sceKernelHookJalSyscall(userIoOpenAsync, user_sceIoOpenAsync, mod);		
-
-// 	ClearCaches();
-// }
-
 // This patch is still needed in ark5
 void patch_popsman()
 {
@@ -240,12 +178,6 @@ int module_start_handler(SceModule2 *module)
 {
 	kprintf("--------------------\nnpdrm_free module_start_handler()\n");
 	int ret = previous ? previous(module) : 0;
-
-    //MOD: don't patch game module, let nploader_mod handle it.
-	// if (modflag == 1) { //next module after sceKernelLibrary should be the main game module.
-	// 	modflag = 2;
-	// 	patch_game_module(module);
-	// }
 
 	if (!strcmp(module->modname, "sceNp9660_driver")) {
 		patch_np9660(module);
