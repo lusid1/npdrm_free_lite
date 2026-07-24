@@ -34,24 +34,24 @@ static STMOD_HANDLER previous = NULL;
 // char g_pgd_path[256];
 //u8 pgdbuf[0x90];
 
-void *vshCheckBootable(void *dst, const void *src, int size)
-{
-	kprintf("npdrm_free_loader::vshCheckBootable()\n");
-	SFO *sfo = (SFO *)src;
+// void *vshCheckBootable(void *dst, const void *src, int size)
+// {
+// 	kprintf("npdrm_free_loader::vshCheckBootable()\n");
+// 	SFO *sfo = (SFO *)src;
 
-	int i;
+// 	int i;
 
-	for (i = 0; i < sfo->entries; i++) {
-		if (!strcmp((char *)((u32)src + sfo->label + sfo->sfotable[i].label_offset), "BOOTABLE")) {
-			if (_lw((u32)src + sfo->data + sfo->sfotable[i].data_offset) == 2)
-				_sw(1, (u32)src + sfo->data + sfo->sfotable[i].data_offset);
+// 	for (i = 0; i < sfo->entries; i++) {
+// 		if (!strcmp((char *)((u32)src + sfo->label + sfo->sfotable[i].label_offset), "BOOTABLE")) {
+// 			if (_lw((u32)src + sfo->data + sfo->sfotable[i].data_offset) == 2)
+// 				_sw(1, (u32)src + sfo->data + sfo->sfotable[i].data_offset);
 
-			break;
-		}
-	}
+// 			break;
+// 		}
+// 	}
 
-	return memcpy(dst, src, size);
-}
+// 	return memcpy(dst, src, size);
+// }
 
 // void patch_vsh_module(SceModule2 *mod)
 // {

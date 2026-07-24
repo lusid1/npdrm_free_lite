@@ -64,21 +64,21 @@ int is_licensed_eboot(const char *path)
 	return ret;
 }
 
-SceUID userIoOpen(const char *path, int flags, SceMode mode)
-{
-	if (flags & 0x40000000)
-		strcpy(g_pgd_path, path);
+// SceUID userIoOpen(const char *path, int flags, SceMode mode)
+// {
+// 	if (flags & 0x40000000)
+// 		strcpy(g_pgd_path, path);
 
-	return sceIoOpen(path, flags, mode);
-}
+// 	return sceIoOpen(path, flags, mode);
+// }
 
-SceUID userIoOpenAsync(const char *path, int flags, SceMode mode)
-{
-	if (flags & 0x40000000)
-		strcpy(g_pgd_path, path);
+// SceUID userIoOpenAsync(const char *path, int flags, SceMode mode)
+// {
+// 	if (flags & 0x40000000)
+// 		strcpy(g_pgd_path, path);
 
-	return sceIoOpenAsync(path, flags, mode);
-}
+// 	return sceIoOpenAsync(path, flags, mode);
+// }
 
 //patches sceNpDrmEdataSetupKey and sceNpDrmGetModuleKey
 // int (* setup_edat_version_key)(u8 *vkey, u8 *edat, int size);
