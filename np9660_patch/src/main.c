@@ -25,7 +25,7 @@
 #include "lib.h"
 #include "sctrl.h"
 #include "pgd.h"
-#include "logger.h"
+
 
 
 PSP_MODULE_INFO("npdrm_free", PSP_MODULE_KERNEL, 1, 0);
@@ -176,7 +176,7 @@ void patch_popsman()
 int modflag = 0;
 int module_start_handler(SceModule2 *module)
 {
-	kprintf("--------------------\nnpdrm_free module_start_handler()\n");
+
 	int ret = previous ? previous(module) : 0;
 
 	if (!strcmp(module->modname, "sceNp9660_driver")) {
@@ -193,7 +193,6 @@ int module_start_handler(SceModule2 *module)
 
 int thread_start(SceSize args __attribute__((unused)), void *argp __attribute__((unused)))
 {
-	kprintf("--------------------\nnpdrm_free thread_start()\n");
 	previous = sctrlHENSetStartModuleHandler(module_start_handler);
 
 	return sceKernelExitDeleteThread(0);
@@ -201,7 +200,6 @@ int thread_start(SceSize args __attribute__((unused)), void *argp __attribute__(
 
 int module_start(SceSize args, void *argp)
 {
-	kprintf("--------------------\nnpdrm_free starting\n");
 	applicationType = sceKernelInitKeyConfig();
 
 	SceUID thid = sceKernelCreateThread("npdrm_free", thread_start, 0x22, 0x2000, 0, NULL);

@@ -23,8 +23,6 @@
 #include "lib.h"
 #include "sctrl.h"
 #include "np9660_patch.h"
-//#include "pgd.h"
-#include "logger.h"
 
 PSP_MODULE_INFO("npdrm_free_loader", PSP_MODULE_KERNEL, 1, 0);
 PSP_HEAP_SIZE_KB(0);
@@ -33,7 +31,6 @@ static STMOD_HANDLER previous = NULL;
 
 int module_start_handler(SceModule2 *module)
 {
-	kprintf("npdrm_free_loader::module_start_handler()\n");
 	int ret = previous ? previous(module) : 0;
 
 	return ret;
@@ -41,7 +38,6 @@ int module_start_handler(SceModule2 *module)
 
 int thread_start(SceSize args __attribute__((unused)), void *argp __attribute__((unused)))
 {
-	kprintf("npdrm_free_loader::thread_start()\n");
 	previous = sctrlHENSetStartModuleHandler(module_start_handler);
 
 	SceUID blockid = sceKernelAllocPartitionMemory(1, "npdrm_free_module", PSP_SMEM_Low, size_np9660_patch, NULL);
@@ -57,7 +53,6 @@ int thread_start(SceSize args __attribute__((unused)), void *argp __attribute__(
 
 int module_start(SceSize args, void *argp)
 {
-	kprintf("--------------------\nnpdrm_free_loader starting\n");
 	SceUID thid = sceKernelCreateThread("npdrm_free_loader", thread_start, 0x22, 0x2000, 0, NULL);
 
 	if (thid >= 0)
