@@ -143,36 +143,6 @@ void patch_np9660(SceModule2 *mod)
 	ClearCaches();
 }
 
-// This patch is still needed in ark5
-void patch_popsman()
-{
-	//patch only in pops mode
-	if (applicationType != PSP_INIT_KEYCONFIG_POPS)
-		return;
-
-	//just a patch to generate KEYS.BIN if necessary
-	strcpy(ebootpath, sceKernelInitFileName());
-	SceUID fd = sceIoOpen(ebootpath, PSP_O_RDONLY, 0);
-	sceIoRead(fd, pgdbuf, 0x28);
-
-	if (!memcmp(pgdbuf, "\x00PBP", 4)) {
-		sceIoLseek(fd, tou32(pgdbuf + 0x24), 0);
-		sceIoRead(fd, pgdbuf, 16);
-
-		if (!memcmp(pgdbuf, "PSTITLE", 7))
-			sceIoLseek(fd, 0x1F0, 1);
-		else if (!memcmp(pgdbuf, "PSISO", 5))
-			sceIoLseek(fd, 0x3F0, 1);
-
-		sceIoRead(fd, pgdbuf, 0x90);
-
-		if (!memcmp(pgdbuf, "\x00PGD", 4))
-			dumpPS1key(ebootpath, pgdbuf);
-	}
-
-	sceIoClose(fd);
-}
-
 int modflag = 0;
 int module_start_handler(SceModule2 *module)
 {
@@ -181,8 +151,6 @@ int module_start_handler(SceModule2 *module)
 
 	if (!strcmp(module->modname, "sceNp9660_driver")) {
 		patch_np9660(module);
-	} else if (!strcmp(module->modname, "sceMediaSync")) {
-		patch_popsman();
 	} else if (!strcmp(module->modname, "sceKernelLibrary")) {
 		if (applicationType != PSP_INIT_KEYCONFIG_POPS)
 			modflag = 1;
